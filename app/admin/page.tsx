@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { BookOpen, Users, Images, Plus } from "lucide-react";
-import { listBooks, listAuthors, listGalleries, countBooksByLanguage } from "@/lib/appwrite/data";
+import { listBooks, listAuthors, listGalleries, countBooksByLanguage, countPendingBooks } from "@/lib/appwrite/data";
 import { toNepaliDigits } from "@/lib/utils";
 
 export default async function AdminDashboard() {
-  const [all, yak, nep, eng, authors, galleries] = await Promise.all([
-    listBooks({ limit: 1 }),
+  const [all, yak, nep, eng, authors, galleries, pending] = await Promise.all([
+    listBooks({ limit: 1, status: "all" }),
     countBooksByLanguage("yakthung"),
     countBooksByLanguage("nepali"),
     countBooksByLanguage("english"),
     listAuthors(500),
     listGalleries(),
+    countPendingBooks(),
   ]);
 
   const stats = [
@@ -25,6 +26,18 @@ export default async function AdminDashboard() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <h1 className="text-2xl font-bold sm:text-3xl">ड्यासबोर्ड</h1>
+
+      {pending > 0 && (
+        <Link
+          href="/admin/books?status=draft"
+          className="mt-6 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-800 hover:bg-amber-100"
+        >
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-amber-200 font-bold">
+            {toNepaliDigits(pending)}
+          </span>
+          <span className="font-medium">रचना समीक्षाको प्रतीक्षामा — हेर्नुहोस्</span>
+        </Link>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((s) => (

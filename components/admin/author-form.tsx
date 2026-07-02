@@ -10,8 +10,10 @@ import { ScriptField } from "@/components/site/script-field";
 import { FileUpload } from "./file-upload";
 import type { Author } from "@/lib/types";
 
-export function AuthorForm({ author }: { author?: Author }) {
+export function AuthorForm({ author, mode = "admin" }: { author?: Author; mode?: "admin" | "author" }) {
   const router = useRouter();
+  const isAuthor = mode === "author";
+  const uploadEndpoint = isAuthor ? "/api/studio/upload" : "/api/admin/upload";
   const [pending, setPending] = React.useState(false);
   const [name, setName] = React.useState(author?.name ?? "");
   const [nameLimbu, setNameLimbu] = React.useState(author?.nameLimbu ?? "");
@@ -33,9 +35,13 @@ export function AuthorForm({ author }: { author?: Author }) {
     }
     setPending(true);
     try {
-      const url = author ? `/api/admin/authors/${author.$id}` : "/api/admin/authors";
+      const url = isAuthor
+        ? "/api/studio/profile"
+        : author
+          ? `/api/admin/authors/${author.$id}`
+          : "/api/admin/authors";
       const res = await fetch(url, {
-        method: author ? "PATCH" : "POST",
+        method: isAuthor || author ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -44,8 +50,8 @@ export function AuthorForm({ author }: { author?: Author }) {
         toast.error(data.error || "सुरक्षित गर्न असफल");
         return;
       }
-      toast.success(author ? "अद्यावधिक भयो" : "सर्जक थपियो");
-      router.push("/admin/authors");
+      toast.success("अद्यावधिक भयो");
+      router.push(isAuthor ? "/studio" : "/admin/authors");
       router.refresh();
     } finally {
       setPending(false);
@@ -82,6 +88,7 @@ export function AuthorForm({ author }: { author?: Author }) {
           currentId={author?.photoId}
           onUploaded={(id) => setPhotoId(id)}
           label="तस्वीर"
+          endpoint={uploadEndpoint}
         />
       </div>
       <div className="flex items-center gap-3">

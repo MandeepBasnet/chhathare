@@ -19,7 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const book = await getBookBySlug(slug);
-  if (!book) notFound();
+  // Drafts (pending review) are not visible on the public site.
+  if (!book || book.status === "draft") notFound();
 
   const limbu = isLimbuScript(book.language);
   const title = limbu ? book.titleLimbu || book.title : book.title;

@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-mukta), "Noto Sans Devanagari", var(--font-noto-limbu), "Noto Sans Limbu", system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-mukta), "Noto Serif Devanagari", var(--font-noto-limbu), "Noto Sans Limbu", Georgia, serif;
+  /* Yakthung (Limbu) — `font-limbu` utility. Backed by the self-hosted
+     next/font (--font-noto-limbu) with Noto Sans Limbu as system fallback. */
+  --font-limbu: var(--font-noto-limbu), "Noto Sans Limbu", sans-serif;
+
+  /* Brand scale — a warm ink/indigo suited to a literary library. */
+  --color-mountain-50: #f3f2fb;
+  --color-mountain-100: #e6e3f6;
+  --color-mountain-200: #cfc9ee;
+  --color-mountain-300: #ab9fdf;
+  --color-mountain-400: #8571cd;
+  --color-mountain-500: #6a53bd;
+  --color-mountain-600: #573fa6;
+  --color-mountain-700: #483488;
+  --color-mountain-800: #3b2d6f;
+  --color-mountain-900: #2c2354;
+  --color-paper: #f7f5ef;
+  --color-ink: #1c1a2e;
+}
+
+:root {
+  --background: #f7f5ef;
+  --foreground: #1c1a2e;
+  --card: #ffffff;
+  --border: #e5e0d6;
+  --ring: var(--color-mountain-500);
+  --color-muted: #6b6478;
+  --accent: #efeaf9;
+}
+
+html.dark {
+  --background: #14121f;
+  --foreground: #ece8f7;
+  --card: #1e1b2e;
+  --border: #322c47;
+  --ring: var(--color-mountain-400);
+  --color-muted: #9a92ad;
+  --accent: #221d36;
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Yakthung (Limbu) text renders in Noto Sans Limbu. */
+.font-limbu {
+  font-family: var(--font-limbu);
+}
+
+/* Hover surface used in dropdowns / nav items so it adapts to dark mode */
+.surface-accent { background: var(--accent); }
+
+/* Top progress bar shown during route transitions */
+.nav-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 100;
+  background: linear-gradient(to right, var(--color-mountain-400), var(--color-mountain-600), var(--color-mountain-400));
+  transform-origin: 0 50%;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(106, 83, 189, 0.55);
+}
+.nav-progress--idle  { transform: scaleX(0); opacity: 0; transition: opacity 0.25s ease 0.1s; }
+.nav-progress--start { transform: scaleX(0.18); transition: transform 0.25s ease-out; opacity: 1; }
+.nav-progress--mid   { transform: scaleX(0.65); transition: transform 1.6s cubic-bezier(0.1, 0.7, 0.3, 1); opacity: 1; }
+.nav-progress--done  { transform: scaleX(1);    transition: transform 0.2s ease; opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress { transition: none; }
+}

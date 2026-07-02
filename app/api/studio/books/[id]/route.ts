@@ -1,24 +1,28 @@
 import { NextResponse } from "next/server";
 import { adminApi } from "@/lib/appwrite/server";
-import { requireAdmin } from "@/lib/appwrite/auth-helpers";
+import { requireAuthor } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
 
 export const runtime = "nodejs";
 const DB = appwriteConfig.databaseId;
 const COL = appwriteConfig.collections.books;
 
-function searchIndexOf(b: {
-  title?: string | null;
-  titleLimbu?: string | null;
-  titleEn?: string | null;
-  authorName?: string | null;
-}): string {
-  return [b.title, b.titleLimbu, b.titleEn, b.authorName].filter(Boolean).join(" ").slice(0, 500);
+// Ownership guard: an author may only touch their own books.
+async function ownedBook(id: string, authorId: string) {
+  try {
+    const doc = await adminApi.databases().getDocument({ databaseId: DB, collectionId: COL, documentId: id });
+    return (doc as unknown as { authorId?: string }).authorId === authorId ? doc : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const { author } = await requireAuthor();
   const { id } = await ctx.params;
+  const owned = await ownedBook(id, author.$id);
+  if (!owned) return NextResponse.json({ error: "अनुमति छैन" }, { status: 403 });
+
   const b = await req.json();
   const primary = b.title || b.titleLimbu || b.titleEn;
   if (!primary) return NextResponse.json({ error: "शीर्षक चाहिन्छ" }, { status: 400 });
@@ -33,18 +37,16 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         titleEn: b.titleEn || null,
         language: b.language,
         genre: b.genre || null,
-        authorId: b.authorId || null,
-        authorName: b.authorName || null,
         coverImageId: b.coverImageId || null,
-        coverBucket: b.coverBucket || null,
+        coverBucket: b.coverImageId ? "general" : null,
         fileId: b.fileId || null,
-        fileBucket: b.fileBucket || null,
-        fileSizeBytes: b.fileSizeBytes ?? null,
+        fileBucket: b.fileId ? "books" : null,
+        fileSizeBytes: b.fileId ? b.fileSizeBytes ?? null : null,
         description: b.description || null,
         publishedYear: b.publishedYear || null,
-        priority: Number.isFinite(b.priority) ? b.priority : 0,
-        status: b.status === "draft" ? "draft" : "published",
-        searchIndex: searchIndexOf(b),
+        // Any author edit re-enters the review queue.
+        status: "draft",
+        searchIndex: [b.title, b.titleLimbu, b.titleEn, author.name].filter(Boolean).join(" ").slice(0, 500),
       },
     });
     return NextResponse.json({ ok: true });
@@ -55,17 +57,15 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 }
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const { author } = await requireAuthor();
   const { id } = await ctx.params;
+  const owned = await ownedBook(id, author.$id);
+  if (!owned) return NextResponse.json({ error: "अनुमति छैन" }, { status: 403 });
   try {
-    // Best-effort: remove the attached PDF from storage too.
-    try {
-      const doc = await adminApi.databases().getDocument({ databaseId: DB, collectionId: COL, documentId: id });
-      const fileId = (doc as unknown as { fileId?: string }).fileId;
-      if (fileId) {
-        await adminApi.storage().deleteFile({ bucketId: appwriteConfig.buckets.books, fileId }).catch(() => {});
-      }
-    } catch {}
+    const fileId = (owned as unknown as { fileId?: string }).fileId;
+    if (fileId) {
+      await adminApi.storage().deleteFile({ bucketId: appwriteConfig.buckets.books, fileId }).catch(() => {});
+    }
     await adminApi.databases().deleteDocument({ databaseId: DB, collectionId: COL, documentId: id });
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {

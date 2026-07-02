@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ID, Query } from "node-appwrite";
 import { adminApi } from "@/lib/appwrite/server";
-import { requireAdmin } from "@/lib/appwrite/auth-helpers";
+import { requireAuthor } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { slugify } from "@/lib/utils";
 
@@ -25,24 +25,14 @@ async function uniqueSlug(base: string): Promise<string> {
   }
 }
 
-function searchIndexOf(b: {
-  title?: string | null;
-  titleLimbu?: string | null;
-  titleEn?: string | null;
-  authorName?: string | null;
-}): string {
-  return [b.title, b.titleLimbu, b.titleEn, b.authorName]
-    .filter(Boolean)
-    .join(" ")
-    .slice(0, 500);
-}
-
+// Author-created books: authorId/authorName are locked to the logged-in author,
+// and everything starts as a draft pending admin approval.
 export async function POST(req: Request) {
-  await requireAdmin();
+  const { author } = await requireAuthor();
   const b = await req.json();
   const primary = b.title || b.titleLimbu || b.titleEn;
   if (!primary) return NextResponse.json({ error: "शीर्षक चाहिन्छ" }, { status: 400 });
-  if (b.language !== "yakthung" && b.language !== "nepali") {
+  if (b.language !== "yakthung" && b.language !== "nepali" && b.language !== "english") {
     return NextResponse.json({ error: "भाषा अमान्य" }, { status: 400 });
   }
   try {
@@ -58,18 +48,18 @@ export async function POST(req: Request) {
         titleEn: b.titleEn || null,
         language: b.language,
         genre: b.genre || null,
-        authorId: b.authorId || null,
-        authorName: b.authorName || null,
+        authorId: author.$id,
+        authorName: author.name,
         coverImageId: b.coverImageId || null,
-        coverBucket: b.coverBucket || null,
+        coverBucket: b.coverImageId ? "general" : null,
         fileId: b.fileId || null,
-        fileBucket: b.fileBucket || null,
-        fileSizeBytes: b.fileSizeBytes ?? null,
+        fileBucket: b.fileId ? "books" : null,
+        fileSizeBytes: b.fileId ? b.fileSizeBytes ?? null : null,
         description: b.description || null,
         publishedYear: b.publishedYear || null,
-        priority: Number.isFinite(b.priority) ? b.priority : 0,
-        status: b.status === "draft" ? "draft" : "published",
-        searchIndex: searchIndexOf(b),
+        priority: 0,
+        status: "draft",
+        searchIndex: [b.title, b.titleLimbu, b.titleEn, author.name].filter(Boolean).join(" ").slice(0, 500),
       },
     });
     return NextResponse.json({ ok: true, id: res.$id, slug });

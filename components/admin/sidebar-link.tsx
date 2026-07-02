@@ -18,7 +18,11 @@ export function AdminSidebarLink({
       href={href}
       className={
         "flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors " +
-        (active ? "bg-mountain-50 font-medium text-mountain-700" : "hover:bg-mountain-50")
+        // Use the theme-aware --accent surface so hover/active stay legible in
+        // both light and dark mode (the old fixed light bg hid text in dark).
+        (active
+          ? "bg-[var(--accent)] font-semibold text-mountain-700 dark:text-mountain-200"
+          : "text-[var(--foreground)] hover:bg-[var(--accent)]")
       }
     >
       {icon}

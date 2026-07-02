@@ -208,7 +208,7 @@ export function ScriptField({
           className={
             "shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-md border transition " +
             (open
-              ? "border-mountain-400 bg-mountain-50 text-mountain-700"
+              ? "border-mountain-400 bg-[var(--accent)] text-mountain-700 dark:text-mountain-200"
               : "border-[var(--border)] text-[var(--color-muted)] hover:border-mountain-400")
           }
         >

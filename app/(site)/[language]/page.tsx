@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { isLanguage, GENRES_BY_LANGUAGE, LANGUAGE_LABELS, isLimbuScript } from "@/lib/taxonomy";
-import { listBooks } from "@/lib/appwrite/data";
+import { listBooks, genresInLanguage } from "@/lib/appwrite/data";
 import { BookCard } from "@/components/site/book-card";
 import { toNepaliDigits } from "@/lib/utils";
 
@@ -18,13 +18,15 @@ export default async function LanguagePage({ params }: { params: Promise<{ langu
 
   const limbu = isLimbuScript(language);
   const genres = GENRES_BY_LANGUAGE[language];
-  const { items, total } = await listBooks({ language, limit: 12 });
+  const [{ items, total }, usage] = await Promise.all([
+    listBooks({ language, limit: 12 }),
+    genresInLanguage(language),
+  ]);
 
-  // Count books per genre in this language (single pass over the fetched list is
-  // not enough at scale; query counts per genre).
-  const counts = await Promise.all(
-    genres.map((g) => listBooks({ language, genre: g.key, limit: 1 }).then((r) => r.total)),
-  );
+  const usageMap = new Map(usage.map((u) => [u.key, u.count]));
+  const staticKeys = new Set(genres.map((g) => g.key));
+  // Custom ("Others") categories authors/admins created, shown as extra filters.
+  const customGenres = usage.filter((u) => !staticKeys.has(u.key));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -36,12 +38,12 @@ export default async function LanguagePage({ params }: { params: Promise<{ langu
       </div>
       <p className="mt-1 text-[var(--color-muted)]">विधा अनुसार साहित्य हेर्नुहोस्।</p>
 
-      {/* Genre grid */}
+      {/* Genre grid — predefined categories + any custom "Others" categories. */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {genres.map((g, i) => (
+        {genres.map((g) => (
           <Link
             key={g.key}
-            href={`/${language}/${g.key}`}
+            href={`/${language}/${encodeURIComponent(g.key)}`}
             className="group flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-mountain-400 hover:shadow-md"
           >
             <div>
@@ -50,7 +52,25 @@ export default async function LanguagePage({ params }: { params: Promise<{ langu
             </div>
             <div className="flex items-center gap-2 text-[var(--color-muted)]">
               <span className="rounded-full bg-mountain-50 px-2 py-0.5 text-xs text-mountain-700">
-                {toNepaliDigits(counts[i])}
+                {toNepaliDigits(usageMap.get(g.key) ?? 0)}
+              </span>
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+            </div>
+          </Link>
+        ))}
+        {customGenres.map((c) => (
+          <Link
+            key={c.key}
+            href={`/${language}/${encodeURIComponent(c.key)}`}
+            className="group flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:border-mountain-400 hover:shadow-md"
+          >
+            <div>
+              <div className={"text-lg font-semibold " + (limbu ? "font-limbu" : "")}>{c.key}</div>
+              <div className="text-xs text-[var(--color-muted)]">Others</div>
+            </div>
+            <div className="flex items-center gap-2 text-[var(--color-muted)]">
+              <span className="rounded-full bg-mountain-50 px-2 py-0.5 text-xs text-mountain-700">
+                {toNepaliDigits(c.count)}
               </span>
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </div>

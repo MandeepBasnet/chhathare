@@ -33,7 +33,12 @@ export function BookForm({
 
   const [pending, setPending] = React.useState(false);
   const [language, setLanguage] = React.useState<Language>(book?.language ?? "yakthung");
-  const [genre, setGenre] = React.useState(book?.genre ?? "");
+  // A stored genre that isn't one of the predefined keys is a custom category:
+  // show it under "Others" with its name pre-filled.
+  const initialStaticKeys = GENRES_BY_LANGUAGE[book?.language ?? "yakthung"].map((g) => g.key);
+  const initialCustom = !!book?.genre && !initialStaticKeys.includes(book.genre);
+  const [genre, setGenre] = React.useState(initialCustom ? "others" : book?.genre ?? "");
+  const [customGenre, setCustomGenre] = React.useState(initialCustom ? book!.genre! : "");
   const [title, setTitle] = React.useState(book?.title ?? "");
   const [titleLimbu, setTitleLimbu] = React.useState(book?.titleLimbu ?? "");
   const [authorId, setAuthorId] = React.useState(book?.authorId ?? "");
@@ -53,7 +58,8 @@ export function BookForm({
       titleLimbu: titleLimbu.trim() || null,
       titleEn: (fd.get("titleEn") as string)?.trim() || null,
       language,
-      genre: genre || null,
+      // "Others" with a typed name stores that custom category; empty falls back to "others".
+      genre: genre === "others" ? customGenre.trim().slice(0, 40) || "others" : genre || null,
       coverImageId,
       coverBucket: coverImageId ? "general" : null,
       fileId,
@@ -115,6 +121,7 @@ export function BookForm({
             onChange={(e) => {
               setLanguage(e.target.value as Language);
               setGenre("");
+              setCustomGenre("");
             }}
             className="mt-1"
           >
@@ -135,6 +142,29 @@ export function BookForm({
           </Select>
         </div>
       </div>
+
+      {/* Custom category name when "Others" is chosen. */}
+      {genre === "others" && (
+        <div>
+          <Label>नयाँ विधाको नाम (Category name)</Label>
+          <div className="mt-1">
+            {language === "english" ? (
+              <Input value={customGenre} onChange={(e) => setCustomGenre(e.target.value)} placeholder="e.g. Memoir" />
+            ) : (
+              <ScriptField
+                key={`custom-genre-${language}`}
+                script={language === "yakthung" ? "limbu" : "nepali"}
+                defaultValue={customGenre}
+                onValueChange={setCustomGenre}
+                placeholder={language === "yakthung" ? "ᤛᤡᤖᤡᤈᤣᤅ᤺ᤠ" : "जस्तै: संस्मरण, नियात्रा"}
+              />
+            )}
+          </div>
+          <p className="mt-1 text-xs text-[var(--color-muted)]">
+            नयाँ विधा भए यहाँ नाम लेख्नुहोस्; खाली छोडे साधारण &ldquo;अन्य&rdquo; मा राखिन्छ। यो विधा फिल्टरमा पनि देखिन्छ।
+          </p>
+        </div>
+      )}
 
       {/* Titles — primary input matches the language; others are optional. */}
       {language === "yakthung" && (

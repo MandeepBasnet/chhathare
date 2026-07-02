@@ -8,7 +8,7 @@ import {
   LANGUAGE_LABELS,
   isLimbuScript,
 } from "@/lib/taxonomy";
-import { listBooks } from "@/lib/appwrite/data";
+import { listBooks, genresInLanguage } from "@/lib/appwrite/data";
 import { BookCard } from "@/components/site/book-card";
 import { toNepaliDigits } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { language, genre } = await params;
   if (!isLanguage(language)) return {};
   const g = getGenre(language, genre);
-  return { title: g ? g.ne : "विधा" };
+  return { title: g ? g.ne : decodeURIComponent(genre) };
 }
 
 export default async function GenrePage({
@@ -31,10 +31,18 @@ export default async function GenrePage({
   const { language, genre } = await params;
   if (!isLanguage(language)) notFound();
   const g = getGenre(language, genre);
-  if (!g) notFound();
+  // g is undefined for custom ("Others") categories — that's allowed; use the
+  // raw stored value as the label.
+  const label = g ? g.ne : genre;
 
   const limbu = isLimbuScript(language);
-  const { items, total } = await listBooks({ language, genre, limit: 60 });
+  const [{ items, total }, usage] = await Promise.all([
+    listBooks({ language, genre, limit: 60 }),
+    genresInLanguage(language),
+  ]);
+
+  const staticKeys = new Set(GENRES_BY_LANGUAGE[language].map((x) => x.key));
+  const customGenres = usage.filter((u) => !staticKeys.has(u.key));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -43,20 +51,20 @@ export default async function GenrePage({
           {LANGUAGE_LABELS[language].ne}
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className={limbu ? "font-limbu" : ""}>{g.ne}</span>
+        <span className={limbu ? "font-limbu" : ""}>{label}</span>
       </nav>
 
       <div className="mt-2 flex items-baseline gap-3">
-        <h1 className={"text-3xl font-bold " + (limbu ? "font-limbu" : "")}>{g.ne}</h1>
+        <h1 className={"text-3xl font-bold " + (limbu ? "font-limbu" : "")}>{label}</h1>
         <span className="text-sm text-[var(--color-muted)]">{toNepaliDigits(total)} रचना</span>
       </div>
 
-      {/* Sibling genres */}
+      {/* Sibling genres — predefined + custom categories in use. */}
       <div className="mt-4 flex flex-wrap gap-2">
         {GENRES_BY_LANGUAGE[language].map((sg) => (
           <Link
             key={sg.key}
-            href={`/${language}/${sg.key}`}
+            href={`/${language}/${encodeURIComponent(sg.key)}`}
             className={
               "rounded-full border px-3 py-1 text-sm transition " +
               (sg.key === genre
@@ -66,6 +74,21 @@ export default async function GenrePage({
             }
           >
             {sg.ne}
+          </Link>
+        ))}
+        {customGenres.map((c) => (
+          <Link
+            key={c.key}
+            href={`/${language}/${encodeURIComponent(c.key)}`}
+            className={
+              "rounded-full border px-3 py-1 text-sm transition " +
+              (c.key === genre
+                ? "border-mountain-500 bg-mountain-600 text-white"
+                : "border-[var(--border)] text-[var(--color-muted)] hover:border-mountain-400") +
+              (limbu ? " font-limbu" : "")
+            }
+          >
+            {c.key}
           </Link>
         ))}
       </div>

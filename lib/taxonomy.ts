@@ -14,6 +14,7 @@ export const YAKTHUNG_GENRES: Genre[] = [
   { key: "sammila", ne: "साम्मिला (कविता)", en: "Poetry" },
   { key: "kheda", ne: "खेदा (कथा)", en: "Story" },
   { key: "nisambhe", ne: "निसाम्भे (उपन्यास)", en: "Novel" },
+  { key: "others", ne: "अन्य", en: "Others" },
 ];
 
 // नेपाली: कथा, कविता, उपन्यास, गीत, गजल, हाइकु इत्यादी
@@ -24,6 +25,7 @@ export const NEPALI_GENRES: Genre[] = [
   { key: "geet", ne: "गीत", en: "Song" },
   { key: "ghazal", ne: "गजल", en: "Ghazal" },
   { key: "haiku", ne: "हाइकु", en: "Haiku" },
+  { key: "others", ne: "अन्य", en: "Others" },
 ];
 
 // English works: standard literary genres.

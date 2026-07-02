@@ -96,6 +96,33 @@ export async function recentBooks(limit = 8): Promise<Book[]> {
   return res.documents.map(asBook);
 }
 
+// Distinct genres actually present in published books for a language, with
+// counts. Used to surface custom ("Others") categories as filters alongside the
+// predefined ones. Scans in pages of 100 (fine for up to a few hundred books).
+export async function genresInLanguage(
+  language: Language,
+): Promise<{ key: string; count: number }[]> {
+  const counts = new Map<string, number>();
+  let cursor: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    const queries = [
+      Query.equal("language", language),
+      Query.equal("status", "published"),
+      Query.orderAsc("$id"),
+      Query.limit(100),
+    ];
+    if (cursor) queries.push(Query.cursorAfter(cursor));
+    const res = await adminApi.databases().listDocuments({ databaseId: DB, collectionId: C.books, queries });
+    for (const d of res.documents) {
+      const g = (d as unknown as Book).genre;
+      if (g) counts.set(g, (counts.get(g) ?? 0) + 1);
+    }
+    if (res.documents.length < 100) break;
+    cursor = res.documents[res.documents.length - 1].$id;
+  }
+  return [...counts.entries()].map(([key, count]) => ({ key, count }));
+}
+
 // Count books pending admin review (author drafts).
 export async function countPendingBooks(): Promise<number> {
   const res = await adminApi.databases().listDocuments({

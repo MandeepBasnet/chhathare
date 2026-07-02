@@ -9,39 +9,40 @@
      next/font (--font-noto-limbu) with Noto Sans Limbu as system fallback. */
   --font-limbu: var(--font-noto-limbu), "Noto Sans Limbu", sans-serif;
 
-  /* Brand scale — a warm ink/indigo suited to a literary library. */
-  --color-mountain-50: #f3f2fb;
-  --color-mountain-100: #e6e3f6;
-  --color-mountain-200: #cfc9ee;
-  --color-mountain-300: #ab9fdf;
-  --color-mountain-400: #8571cd;
-  --color-mountain-500: #6a53bd;
-  --color-mountain-600: #573fa6;
-  --color-mountain-700: #483488;
-  --color-mountain-800: #3b2d6f;
-  --color-mountain-900: #2c2354;
-  --color-paper: #f7f5ef;
-  --color-ink: #1c1a2e;
+  /* Brand scale — Teal & Slate. `mountain-*` is kept as the token name so every
+     component re-themes from here; the ramp is teal. */
+  --color-mountain-50: #eafbfa;
+  --color-mountain-100: #cdf3f1;
+  --color-mountain-200: #a6e8e5;
+  --color-mountain-300: #6fd8d3;
+  --color-mountain-400: #34c0ba;
+  --color-mountain-500: #12a7a1;
+  --color-mountain-600: #0d7d7a;
+  --color-mountain-700: #0b6260;
+  --color-mountain-800: #0c4e4d;
+  --color-mountain-900: #0d3f3e;
+  --color-paper: #f4f7f7;
+  --color-ink: #10201f;
 }
 
 :root {
-  --background: #f7f5ef;
-  --foreground: #1c1a2e;
+  --background: #f4f7f7;
+  --foreground: #10201f;
   --card: #ffffff;
-  --border: #e5e0d6;
+  --border: #dbe3e3;
   --ring: var(--color-mountain-500);
-  --color-muted: #6b6478;
-  --accent: #efeaf9;
+  --color-muted: #5a6b6b;
+  --accent: #dbeeed;
 }
 
 html.dark {
-  --background: #14121f;
-  --foreground: #ece8f7;
-  --card: #1e1b2e;
-  --border: #322c47;
+  --background: #0c1416;
+  --foreground: #e6f0ef;
+  --card: #13201f;
+  --border: #223634;
   --ring: var(--color-mountain-400);
-  --color-muted: #9a92ad;
-  --accent: #221d36;
+  --color-muted: #8aa3a1;
+  --accent: #17292a;
 }
 
 html, body {
@@ -72,7 +73,7 @@ body {
   background: linear-gradient(to right, var(--color-mountain-400), var(--color-mountain-600), var(--color-mountain-400));
   transform-origin: 0 50%;
   pointer-events: none;
-  box-shadow: 0 0 12px rgba(106, 83, 189, 0.55);
+  box-shadow: 0 0 12px rgba(18, 167, 161, 0.55);
 }
 .nav-progress--idle  { transform: scaleX(0); opacity: 0; transition: opacity 0.25s ease 0.1s; }
 .nav-progress--start { transform: scaleX(0.18); transition: transform 0.25s ease-out; opacity: 1; }

@@ -13,7 +13,6 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 md:h-20 md:gap-7 lg:px-8">
         <Link href="/" className="flex shrink-0 flex-col leading-tight">
           <span className="text-lg font-bold text-mountain-700 md:text-xl">छथरे लिम्बु साहित्य</span>
-          <span className="font-limbu text-[11px] text-[var(--color-muted)]">ᤒᤠᤴ ᤁᤡᤔ᤺ᤠ</span>
         </Link>
         <div className="flex-1" />
         <MainNav />

@@ -59,3 +59,17 @@ export interface SitePage extends AppwriteDoc {
   title: string;
   content?: string | null;
 }
+
+export type AccessAction = "view" | "download";
+
+// One row per protected-content access, for copyright attribution + admin research.
+export interface AccessLog extends AppwriteDoc {
+  userId: string;
+  userEmail: string;
+  userName?: string | null;
+  bookId: string;
+  bookTitle?: string | null;
+  action: AccessAction;
+  ip?: string | null;
+  userAgent?: string | null;
+}

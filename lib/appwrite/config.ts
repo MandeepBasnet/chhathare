@@ -15,6 +15,7 @@ export const appwriteConfig = {
     galleries: "galleries",
     galleryImages: "gallery_images",
     pages: "pages",
+    accessLogs: "access_logs",
   },
   teams: {
     admin: "admin",

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Users, Images, Home } from "lucide-react";
+import { LayoutDashboard, BookOpen, Users, Images, Home, ScrollText } from "lucide-react";
 import { requireAdmin } from "@/lib/appwrite/auth-helpers";
 import { AdminSidebarLink } from "@/components/admin/sidebar-link";
 
@@ -28,6 +28,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </AdminSidebarLink>
           <AdminSidebarLink href="/admin/galleries" icon={<Images className="h-4 w-4" />}>
             ग्यालरीहरू
+          </AdminSidebarLink>
+          <AdminSidebarLink href="/admin/logs" icon={<ScrollText className="h-4 w-4" />}>
+            पहुँच अभिलेख
           </AdminSidebarLink>
         </nav>
       </aside>

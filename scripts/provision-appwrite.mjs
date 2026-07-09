@@ -84,10 +84,13 @@ async function waitForAttrs(collection, keys, timeoutMs = 60_000) {
   throw new Error("Timeout waiting for attributes in " + collection);
 }
 
-async function ensureCollection(id, name, attrs, indexes) {
+async function ensureCollection(id, name, attrs, indexes, opts = {}) {
+  // Public content is world-readable; sensitive collections (e.g. access_logs)
+  // pass { adminReadOnly: true } so only the admin team can read them.
+  const readRole = opts.adminReadOnly ? Role.team(ADMIN_TEAM_ID) : Role.any();
   await ensure(`collection ${id}`, () =>
     db.createCollection(DB_ID, id, name, [
-      Permission.read(Role.any()),
+      Permission.read(readRole),
       Permission.create(Role.team(ADMIN_TEAM_ID)),
       Permission.update(Role.team(ADMIN_TEAM_ID)),
       Permission.delete(Role.team(ADMIN_TEAM_ID)),
@@ -105,13 +108,21 @@ async function ensureCollection(id, name, attrs, indexes) {
 async function ensureBucket(id, name, opts = {}) {
   const extensions = opts.extensions || ["jpg", "jpeg", "png", "webp", "gif", "svg"];
   const maxSize = opts.maxSize || 30_000_000;
+  // Private buckets drop the public `Role.any()` read so files are only
+  // reachable via the server (admin API key), never a shareable direct URL.
+  const readRole = opts.private ? Role.team(ADMIN_TEAM_ID) : Role.any();
+  const perms = [
+    Permission.read(readRole),
+    Permission.create(Role.team(ADMIN_TEAM_ID)),
+    Permission.update(Role.team(ADMIN_TEAM_ID)),
+    Permission.delete(Role.team(ADMIN_TEAM_ID)),
+  ];
   await ensure(`bucket ${id}`, () =>
-    storage.createBucket(id, name, [
-      Permission.read(Role.any()),
-      Permission.create(Role.team(ADMIN_TEAM_ID)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
-      Permission.delete(Role.team(ADMIN_TEAM_ID)),
-    ], true, undefined, maxSize, extensions, undefined, true, true),
+    storage.createBucket(id, name, perms, true, undefined, maxSize, extensions, undefined, true, true),
+  );
+  // Enforce permissions on re-run too (createBucket is skipped once it exists).
+  await ensure(`bucket ${id} perms`, () =>
+    storage.updateBucket(id, name, perms, true, undefined, maxSize, extensions, undefined, true, true),
   );
 }
 
@@ -186,6 +197,23 @@ const pagesAttrs = [
 ];
 const pagesIndexes = [{ key: "slug_unique", type: IndexType.Unique, attributes: ["slug"] }];
 
+// पहुँच अभिलेख (access logs) — who viewed which protected content, for copyright
+// attribution + admin research. Written server-side; readable by admins only.
+const accessLogsAttrs = [
+  { key: "userId", type: "string", size: 64, required: true },
+  { key: "userEmail", type: "string", size: 320, required: true },
+  { key: "userName", type: "string", size: 200, required: false },
+  { key: "bookId", type: "string", size: 64, required: true },
+  { key: "bookTitle", type: "string", size: 300, required: false },
+  { key: "action", type: "enum", elements: ["view", "download"], required: true },
+  { key: "ip", type: "string", size: 64, required: false },
+  { key: "userAgent", type: "string", size: 512, required: false },
+];
+const accessLogsIndexes = [
+  { key: "user_idx", type: IndexType.Key, attributes: ["userId"] },
+  { key: "book_idx", type: IndexType.Key, attributes: ["bookId"] },
+];
+
 async function main() {
   console.log(`Provisioning on ${ENDPOINT}, project ${PROJECT}, db ${DB_ID}`);
   await ensureDb();
@@ -196,10 +224,14 @@ async function main() {
   await ensureCollection("galleries", "Galleries", galleriesAttrs, galleriesIndexes);
   await ensureCollection("gallery_images", "Gallery Images", galleryImagesAttrs, galleryImagesIndexes);
   await ensureCollection("pages", "Pages", pagesAttrs, pagesIndexes);
+  await ensureCollection("access_logs", "Access Logs", accessLogsAttrs, accessLogsIndexes, {
+    adminReadOnly: true,
+  });
 
   await ensureBucket(BOOKS_BUCKET, "Sahitya Books (PDF)", {
     extensions: ["pdf"],
     maxSize: 30_000_000, // 30 MB server cap on this Appwrite instance
+    private: true, // no public URLs — PDFs are streamed via /api/read/[id] only
   });
 
   console.log("\nDone.");

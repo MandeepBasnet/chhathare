@@ -2,7 +2,7 @@ import "server-only";
 import { Query } from "node-appwrite";
 import { adminApi } from "./server";
 import { appwriteConfig } from "./config";
-import type { Author, Book, BookStatus, Gallery, GalleryImage, SitePage } from "@/lib/types";
+import type { AccessLog, Author, Book, BookStatus, Gallery, GalleryImage, SitePage } from "@/lib/types";
 import type { Language } from "@/lib/taxonomy";
 
 const DB = appwriteConfig.databaseId;
@@ -235,4 +235,24 @@ export async function getPage(slug: string): Promise<SitePage | null> {
     queries: [Query.equal("slug", slug), Query.limit(1)],
   });
   return (res.documents[0] as unknown as SitePage) || null;
+}
+
+// ─── Access logs (admin research) ───────────────────────────────────────────
+
+export async function listAccessLogs(limit = 200): Promise<AccessLog[]> {
+  const res = await adminApi.databases().listDocuments({
+    databaseId: DB,
+    collectionId: C.accessLogs,
+    queries: [Query.orderDesc("$createdAt"), Query.limit(limit)],
+  });
+  return res.documents as unknown as AccessLog[];
+}
+
+export async function countAccessLogs(): Promise<number> {
+  const res = await adminApi.databases().listDocuments({
+    databaseId: DB,
+    collectionId: C.accessLogs,
+    queries: [Query.limit(1)],
+  });
+  return res.total;
 }

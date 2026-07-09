@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Plus, Users, Pencil } from "lucide-react";
+import Image from "next/image";
+import { Plus, Users, Pencil, User } from "lucide-react";
 import { listAuthors } from "@/lib/appwrite/data";
+import { photoUrl } from "@/lib/appwrite/storage-url";
 import { DeleteButton } from "@/components/admin/delete-button";
 
 export default async function AdminAuthorsList() {
@@ -21,11 +23,24 @@ export default async function AdminAuthorsList() {
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {authors.map((a) => (
-            <li key={a.$id} className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-              <Link href={`/admin/authors/${a.$id}`} className="min-w-0">
-                <div className="truncate font-semibold hover:text-mountain-700">{a.name}</div>
-                {a.nameLimbu && <div className="font-limbu truncate text-sm text-[var(--color-muted)]">{a.nameLimbu}</div>}
+          {authors.map((a) => {
+            const photo = photoUrl(a.photoId, { width: 96, height: 96, quality: 70, bucket: "general" });
+            return (
+            <li key={a.$id} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+              <Link href={`/admin/authors/${a.$id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-mountain-50">
+                  {photo ? (
+                    <Image src={photo} alt={a.name} fill className="object-cover" sizes="44px" />
+                  ) : (
+                    <div className="absolute inset-0 grid place-items-center text-mountain-300">
+                      <User className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold hover:text-mountain-700">{a.name}</div>
+                  {a.nameLimbu && <div className="font-limbu truncate text-sm text-[var(--color-muted)]">{a.nameLimbu}</div>}
+                </div>
               </Link>
               <div className="flex shrink-0 items-center gap-1.5">
                 <Link href={`/admin/authors/${a.$id}`} aria-label="सम्पादन" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] hover:border-mountain-400">
@@ -34,7 +49,8 @@ export default async function AdminAuthorsList() {
                 <DeleteButton endpoint={`/api/admin/authors/${a.$id}`} confirmText={`"${a.name}" मेटाउने?`} />
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>

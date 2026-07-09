@@ -1,7 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, BookOpen, FileText, Pencil, Clock, CheckCircle2 } from "lucide-react";
 import { requireAuthor } from "@/lib/appwrite/auth-helpers";
 import { listBooks } from "@/lib/appwrite/data";
+import { photoUrl } from "@/lib/appwrite/storage-url";
+import type { BucketKey } from "@/lib/appwrite/config";
 import { genreLabel, LANGUAGE_LABELS, isLimbuScript } from "@/lib/taxonomy";
 import { DeleteButton } from "@/components/admin/delete-button";
 
@@ -43,12 +46,29 @@ export default async function StudioHome() {
                 const limbu = isLimbuScript(b.language);
                 const title = limbu ? b.titleLimbu || b.title : b.title;
                 const published = b.status === "published";
+                const cover = photoUrl(b.coverImageId, {
+                  width: 72,
+                  height: 96,
+                  quality: 70,
+                  bucket: (b.coverBucket as BucketKey) || "general",
+                });
                 return (
                   <tr key={b.$id} className="bg-[var(--background)]">
                     <td className="px-4 py-2.5">
-                      <Link href={`/studio/books/${b.$id}`} className={"font-medium hover:text-mountain-700 " + (limbu ? "font-limbu" : "")}>
-                        {title}
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-mountain-50">
+                          {cover ? (
+                            <Image src={cover} alt={title} fill className="object-cover" sizes="36px" />
+                          ) : (
+                            <div className="absolute inset-0 grid place-items-center text-mountain-300">
+                              <BookOpen className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                        <Link href={`/studio/books/${b.$id}`} className={"font-medium hover:text-mountain-700 " + (limbu ? "font-limbu" : "")}>
+                          {title}
+                        </Link>
+                      </div>
                     </td>
                     <td className="hidden px-4 py-2.5 text-[var(--color-muted)] md:table-cell">
                       {LANGUAGE_LABELS[b.language].ne}

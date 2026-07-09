@@ -1,8 +1,10 @@
 "use client";
 import * as React from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Upload, Check, Loader2, FileText, ImageIcon, X } from "lucide-react";
 import type { BucketKey } from "@/lib/appwrite/config";
+import { photoUrl } from "@/lib/appwrite/storage-url";
 import { formatBytes } from "@/lib/utils";
 
 // Uploads a single file to the given Appwrite bucket via /api/admin/upload and
@@ -63,9 +65,20 @@ export function FileUpload({
     onUploaded(null, null);
   }
 
+  // Live thumbnail of the current/just-uploaded image so the picture is always visible.
+  const preview =
+    kind === "image" && fileId
+      ? photoUrl(fileId, { width: 240, height: 240, quality: 75, bucket })
+      : null;
+
   return (
     <div>
       <span className="mb-1 block text-sm font-medium">{label}</span>
+      {preview && (
+        <div className="relative mb-3 h-28 w-28 overflow-hidden rounded-lg border border-[var(--border)] bg-mountain-50">
+          <Image src={preview} alt={label} fill className="object-cover" sizes="112px" />
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"

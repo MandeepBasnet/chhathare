@@ -82,10 +82,15 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     // swallow — logging must not break the reader experience
   }
 
+  // HTTP header values must be Latin-1; the slug can be Devanagari/Limbu. Use an
+  // ASCII-safe fallback name plus an RFC 5987 UTF-8 name for the real title.
+  const asciiName = (book.slug || "document").replace(/[^\x20-\x7E]/g, "").replace(/["\\]/g, "") || "document";
+  const utf8Name = encodeURIComponent(`${book.slug || "document"}.pdf`);
+
   return new NextResponse(Buffer.from(out), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${book.slug || "document"}.pdf"`,
+      "Content-Disposition": `inline; filename="${asciiName}.pdf"; filename*=UTF-8''${utf8Name}`,
       "Cache-Control": "private, no-store, max-age=0",
     },
   });

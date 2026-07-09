@@ -9,5 +9,6 @@ export default async function DashboardRouter() {
   const { role } = await resolveRole(account.$id);
   if (role === "admin") redirect("/admin");
   if (role === "author") redirect("/studio");
-  redirect("/?error=forbidden");
+  // Readers (no admin/author role) have no dashboard — send them to the site.
+  redirect("/");
 }

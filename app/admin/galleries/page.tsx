@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Images, Pencil } from "lucide-react";
 import { listGalleries } from "@/lib/appwrite/data";
+import { photoUrl } from "@/lib/appwrite/storage-url";
 import { DeleteButton } from "@/components/admin/delete-button";
 
 export default async function AdminGalleriesList() {
@@ -21,11 +23,24 @@ export default async function AdminGalleriesList() {
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {galleries.map((g) => (
-            <li key={g.$id} className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-              <Link href={`/admin/galleries/${g.$id}`} className="min-w-0">
-                <div className="truncate font-semibold hover:text-mountain-700">{g.title}</div>
-                {g.description && <div className="truncate text-sm text-[var(--color-muted)]">{g.description}</div>}
+          {galleries.map((g) => {
+            const cover = photoUrl(g.coverImageId, { width: 160, height: 120, quality: 70, bucket: "gallery" });
+            return (
+            <li key={g.$id} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+              <Link href={`/admin/galleries/${g.$id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md bg-mountain-50">
+                  {cover ? (
+                    <Image src={cover} alt={g.title} fill className="object-cover" sizes="80px" />
+                  ) : (
+                    <div className="absolute inset-0 grid place-items-center text-mountain-200">
+                      <Images className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold hover:text-mountain-700">{g.title}</div>
+                  {g.description && <div className="truncate text-sm text-[var(--color-muted)]">{g.description}</div>}
+                </div>
               </Link>
               <div className="flex shrink-0 items-center gap-1.5">
                 <Link href={`/admin/galleries/${g.$id}`} aria-label="सम्पादन" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] hover:border-mountain-400">
@@ -34,7 +49,8 @@ export default async function AdminGalleriesList() {
                 <DeleteButton endpoint={`/api/admin/galleries/${g.$id}`} confirmText={`"${g.title}" र यसका सबै तस्वीर मेटाउने?`} />
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>

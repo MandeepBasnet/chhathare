@@ -183,7 +183,22 @@ export async function listGalleries(): Promise<Gallery[]> {
     collectionId: C.galleries,
     queries: [Query.orderDesc("$createdAt"), Query.limit(60)],
   });
-  return res.documents as unknown as Gallery[];
+  const galleries = res.documents as unknown as Gallery[];
+  // Galleries don't store an explicit cover — fall back to their first image so
+  // both the admin list and the public index can show a thumbnail.
+  const missing = galleries.filter((g) => !g.coverImageId);
+  await Promise.all(
+    missing.map(async (g) => {
+      const imgs = await adminApi.databases().listDocuments({
+        databaseId: DB,
+        collectionId: C.galleryImages,
+        queries: [Query.equal("galleryId", g.$id), Query.orderAsc("order"), Query.limit(1)],
+      });
+      const first = imgs.documents[0] as unknown as GalleryImage | undefined;
+      if (first) g.coverImageId = first.imageId;
+    }),
+  );
+  return galleries;
 }
 
 export async function getGalleryBySlug(

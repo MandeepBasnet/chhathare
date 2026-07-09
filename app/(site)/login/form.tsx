@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 export function LoginForm({ next }: { next?: string }) {
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,7 +42,24 @@ export function LoginForm({ next }: { next?: string }) {
       </div>
       <div>
         <Label htmlFor="password">पासवर्ड</Label>
-        <Input id="password" name="password" type="password" required className="mt-1" autoComplete="current-password" />
+        <div className="relative mt-1">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            className="pr-10"
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            aria-label={showPassword ? "पासवर्ड लुकाउनुहोस्" : "पासवर्ड देखाउनुहोस्"}
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--color-muted)] hover:text-mountain-700"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "..." : "लग इन गर्नुहोस्"}

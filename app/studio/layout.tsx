@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, User, Home, PenLine } from "lucide-react";
+import { BookOpen, User, Home, PenLine, ScrollText } from "lucide-react";
 import { requireAuthor } from "@/lib/appwrite/auth-helpers";
 import { AdminSidebarLink } from "@/components/admin/sidebar-link";
 
@@ -23,6 +23,9 @@ export default async function StudioLayout({ children }: { children: React.React
         <nav className="space-y-1 p-3 text-sm">
           <AdminSidebarLink href="/studio" icon={<BookOpen className="h-4 w-4" />}>
             मेरा रचनाहरू
+          </AdminSidebarLink>
+          <AdminSidebarLink href="/studio/logs" icon={<ScrollText className="h-4 w-4" />}>
+            पहुँच अभिलेख
           </AdminSidebarLink>
           <AdminSidebarLink href="/studio/profile" icon={<User className="h-4 w-4" />}>
             मेरो परिचय

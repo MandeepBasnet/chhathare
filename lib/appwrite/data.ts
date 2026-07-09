@@ -271,3 +271,15 @@ export async function countAccessLogs(): Promise<number> {
   });
   return res.total;
 }
+
+// Access logs scoped to a specific set of books — used by the author studio so
+// an author only sees readership for their own works.
+export async function listAccessLogsForBooks(bookIds: string[], limit = 200): Promise<AccessLog[]> {
+  if (bookIds.length === 0) return [];
+  const res = await adminApi.databases().listDocuments({
+    databaseId: DB,
+    collectionId: C.accessLogs,
+    queries: [Query.equal("bookId", bookIds), Query.orderDesc("$createdAt"), Query.limit(limit)],
+  });
+  return res.documents as unknown as AccessLog[];
+}

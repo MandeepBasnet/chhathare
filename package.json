@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "provision": "node scripts/provision-appwrite.mjs"
+    "provision": "node scripts/provision-appwrite.mjs",
+    "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
@@ -19,6 +20,7 @@
     "next": "16.2.6",
     "node-appwrite": "^25.2.0",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.1.200",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "sonner": "^2.0.7",

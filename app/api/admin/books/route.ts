@@ -14,7 +14,6 @@ const COL = appwriteConfig.collections.books;
 async function uniqueSlug(base: string): Promise<string> {
   let slug = base;
   let n = 1;
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const res = await adminApi.databases().listDocuments({
       databaseId: DB,

@@ -174,7 +174,6 @@ export function ScriptField({
     setBase(e.target.value);
   }
 
-  const fontClass = script === "limbu" || !isNepali ? "font-limbu" : "";
   const panelRows = romanActive ? ROMAN_ROWS : isNepali ? NEPALI_ROWS : LIMBU_ROWS;
   const combining = romanActive
     ? undefined

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { slugify } from "@/lib/utils";
 import { isLanguage } from "@/lib/taxonomy";
+import { normalizeStatus, publishBlockedReason } from "@/lib/book-rules";
 
 export const runtime = "nodejs";
 const DB = appwriteConfig.databaseId;
@@ -46,6 +47,9 @@ export async function POST(req: Request) {
   if (!isLanguage(b.language)) {
     return NextResponse.json({ error: "भाषा अमान्य" }, { status: 400 });
   }
+  const status = normalizeStatus(b.status);
+  const blocked = publishBlockedReason(status, b.publishedYear);
+  if (blocked) return NextResponse.json({ error: blocked }, { status: 400 });
   try {
     const slug = await uniqueSlug(slugify(primary));
     const res = await adminApi.databases().createDocument({
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
         description: b.description || null,
         publishedYear: b.publishedYear || null,
         priority: Number.isFinite(b.priority) ? b.priority : 0,
-        status: b.status === "draft" ? "draft" : "published",
+        status,
         searchIndex: searchIndexOf(b),
       },
     });

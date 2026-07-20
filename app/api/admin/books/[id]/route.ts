@@ -3,6 +3,7 @@ import { adminApi } from "@/lib/appwrite/server";
 import { requireAdmin } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { isLanguage } from "@/lib/taxonomy";
+import { normalizeStatus, publishBlockedReason } from "@/lib/book-rules";
 
 export const runtime = "nodejs";
 const DB = appwriteConfig.databaseId;
@@ -26,6 +27,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (!isLanguage(b.language)) {
     return NextResponse.json({ error: "भाषा अमान्य" }, { status: 400 });
   }
+  const status = normalizeStatus(b.status);
+  const blocked = publishBlockedReason(status, b.publishedYear);
+  if (blocked) return NextResponse.json({ error: blocked }, { status: 400 });
   try {
     await adminApi.databases().updateDocument({
       databaseId: DB,
@@ -47,7 +51,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         description: b.description || null,
         publishedYear: b.publishedYear || null,
         priority: Number.isFinite(b.priority) ? b.priority : 0,
-        status: b.status === "draft" ? "draft" : "published",
+        status,
         searchIndex: searchIndexOf(b),
       },
     });

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScriptField } from "@/components/site/script-field";
 import { FileUpload } from "./file-upload";
 import { GENRES_BY_LANGUAGE, type Language } from "@/lib/taxonomy";
+import { publishBlockedReason } from "@/lib/book-rules";
 import type { Author, Book, BookStatus } from "@/lib/types";
 
 // Shared by the admin panel and the author studio.
@@ -81,6 +82,14 @@ export function BookForm({
     if (!payload.title && !payload.titleLimbu) {
       toast.error("शीर्षक चाहिन्छ");
       return;
+    }
+    // Authors always save drafts, so the publish bar only applies to admins.
+    if (!isAuthor) {
+      const blocked = publishBlockedReason(status, payload.publishedYear);
+      if (blocked) {
+        toast.error(blocked);
+        return;
+      }
     }
 
     setPending(true);
@@ -238,8 +247,13 @@ export function BookForm({
       {/* Meta */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="publishedYear">प्रकाशन वर्ष</Label>
+          <Label htmlFor="publishedYear">
+            प्रकाशन वर्ष{!isAuthor && <span className="text-red-600"> *</span>}
+          </Label>
           <Input id="publishedYear" name="publishedYear" defaultValue={book?.publishedYear ?? ""} className="mt-1" placeholder="२०८०" />
+          {!isAuthor && (
+            <p className="mt-1 text-xs text-[var(--color-muted)]">प्रकाशित गर्न आवश्यक; ड्राफ्टमा खाली छोड्न सकिन्छ।</p>
+          )}
         </div>
         {!isAuthor && (
           <div>

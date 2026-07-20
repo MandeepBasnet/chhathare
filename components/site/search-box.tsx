@@ -16,10 +16,13 @@ export function SearchBox({
 }) {
   const router = useRouter();
   const [script, setScript] = React.useState<"nepali" | "limbu">("nepali");
-  const value = React.useRef(defaultValue);
+  // State rather than a ref: this is read during render to seed the field on a
+  // script switch, and reading a ref during render is not safe under concurrent
+  // rendering. ScriptField is uncontrolled, so re-rendering doesn't disturb it.
+  const [value, setValue] = React.useState(defaultValue);
 
   function submit() {
-    const q = value.current.trim();
+    const q = value.trim();
     if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
@@ -54,8 +57,8 @@ export function SearchBox({
           <ScriptField
             key={script}
             script={script}
-            defaultValue={value.current}
-            onValueChange={(v) => (value.current = v)}
+            defaultValue={value}
+            onValueChange={setValue}
             onEnter={submit}
             autoFocus={autoFocus}
             placeholder={script === "limbu" ? "रचना वा सर्जक खोज्नुहोस्…" : "रचना वा सर्जकको नाम खोज्नुहोस्…"}

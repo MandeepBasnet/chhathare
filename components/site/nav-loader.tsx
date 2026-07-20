@@ -5,31 +5,53 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 type Phase = "idle" | "start" | "mid" | "done";
 
 // Top progress bar shown during route transitions.
+//
+// The phase is written straight onto the element's class rather than held in
+// state: every transition is triggered by something outside React (a click, a
+// route change, a timer), and the only consumer is a CSS class, so routing it
+// through state bought a re-render per phase and nothing else.
 export function NavLoader() {
   const pathname = usePathname();
   const search = useSearchParams();
   const router = useRouter();
-  const [phase, setPhase] = React.useState<Phase>("idle");
+
+  const barRef = React.useRef<HTMLDivElement | null>(null);
+  const phase = React.useRef<Phase>("idle");
   const finishTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const midTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setPhase = React.useCallback((p: Phase) => {
+    phase.current = p;
+    const el = barRef.current;
+    if (el) el.className = `nav-progress nav-progress--${p}`;
+  }, []);
 
   const start = React.useCallback(() => {
     if (finishTimer.current) clearTimeout(finishTimer.current);
     if (midTimer.current) clearTimeout(midTimer.current);
     setPhase("start");
     midTimer.current = setTimeout(() => setPhase("mid"), 60);
-  }, []);
+  }, [setPhase]);
 
   const finish = React.useCallback(() => {
     if (midTimer.current) clearTimeout(midTimer.current);
     setPhase("done");
     finishTimer.current = setTimeout(() => setPhase("idle"), 320);
-  }, []);
+  }, [setPhase]);
 
+  // The route settled — run the bar out, but only if a navigation started it.
   React.useEffect(() => {
-    if (phase !== "idle") finish();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, search]);
+    if (phase.current !== "idle") finish();
+  }, [pathname, search, finish]);
+
+  // Drop any in-flight timers if the bar unmounts mid-transition.
+  React.useEffect(
+    () => () => {
+      if (finishTimer.current) clearTimeout(finishTimer.current);
+      if (midTimer.current) clearTimeout(midTimer.current);
+    },
+    [],
+  );
 
   React.useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -50,6 +72,12 @@ export function NavLoader() {
     return () => document.removeEventListener("click", onClick);
   }, [start]);
 
+  // Programmatic navigation (router.push from a form, etc.) fires no click, and
+  // the App Router exposes no navigation-start event — so the methods are
+  // wrapped for the lifetime of this component and restored on cleanup.
+  // NOTE: this reaches into Next's router object and is the most likely thing
+  // here to break on a Next upgrade. If the bar stops showing after a form
+  // submit, look here first.
   React.useEffect(() => {
     const r = router as unknown as Record<string, unknown>;
     const orig = { push: r.push, replace: r.replace, back: r.back, forward: r.forward };
@@ -58,6 +86,7 @@ export function NavLoader() {
         start();
         return (fn as (...a: unknown[]) => unknown).apply(r, args);
       }) as T;
+    /* eslint-disable react-hooks/immutability -- deliberate, scoped, and undone in cleanup */
     r.push = wrap(orig.push as never);
     r.replace = wrap(orig.replace as never);
     r.back = wrap(orig.back as never);
@@ -68,7 +97,8 @@ export function NavLoader() {
       r.back = orig.back;
       r.forward = orig.forward;
     };
+    /* eslint-enable react-hooks/immutability */
   }, [router, start]);
 
-  return <div aria-hidden className={`nav-progress nav-progress--${phase}`} />;
+  return <div ref={barRef} aria-hidden className="nav-progress nav-progress--idle" />;
 }

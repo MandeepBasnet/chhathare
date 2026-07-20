@@ -41,17 +41,21 @@ export function FileUpload({
       const fd = new FormData();
       fd.append("file", file);
       fd.append("bucket", bucket);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "अपलोड असफल");
+      const res = await fetch(endpoint, { method: "POST", body: fd });
+      // A failed upload can answer with HTML (auth redirect, platform body-size
+      // limit) — never let JSON parsing throw, or the whole page error-boundaries.
+      const data = await res.json().catch(() => ({}) as { error?: string; fileId?: string; size?: number });
+      if (!res.ok || !data.fileId) {
+        toast.error(data.error || `अपलोड असफल (${res.status})`);
         return;
       }
       setFileId(data.fileId);
-      setSize(data.size);
+      setSize(data.size ?? null);
       setName(file.name);
-      onUploaded(data.fileId, data.size);
+      onUploaded(data.fileId, data.size ?? null);
       toast.success("अपलोड भयो");
+    } catch {
+      toast.error("अपलोड असफल — नेटवर्क जाँच गर्नुहोस्");
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";

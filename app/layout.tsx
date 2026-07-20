@@ -54,7 +54,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Ad/privacy extensions routinely rewrite inline <head> scripts before
+            React hydrates, which reports as a mismatch on this element. The
+            suppression on <html> doesn't reach here — React only applies it one
+            level deep — so it has to sit on the script itself. Nothing about
+            this element is reconciled anyway: it runs once, pre-paint. */}
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>

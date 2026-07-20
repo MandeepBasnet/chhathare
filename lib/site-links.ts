@@ -9,11 +9,11 @@ export const SITE_LINKS = [
     href: process.env.NEXT_PUBLIC_LINK_KHAJUM || "https://khajumchongbang.org",
   },
   {
-    key: "sabayelhang",
+    key: "sawayethang",
     label: "सावायेथाङ नेटवर्क",
     labelEn: "Sawayethang Network",
     href:
-      process.env.NEXT_PUBLIC_LINK_SABAYELHANG ||
+      process.env.NEXT_PUBLIC_LINK_SAWAYETHANG ||
       "https://www.youtube.com/@sawayethangnetwork3692",
   },
   {

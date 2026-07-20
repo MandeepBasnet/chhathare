@@ -15,7 +15,7 @@ project** as Khajum Chongbang (only a new database + a books PDF bucket are adde
 | Tree | साहित्य → **याक्थुङ** (by genre: साम्मिला/खेदा/निसाम्भे) & **नेपाली** (कथा, कविता, उपन्यास, गीत, गजल, हाइकु) | `books.language` enum + `books.genre`; taxonomy in `lib/taxonomy.ts` |
 | 1 | ~10 books, scalable | `books` collection, no cap |
 | 2 | Yakthung font in Yakthung section, Nepali font in Nepali section + **Nepali keyboard like the Yakthung one** | Noto Sans Limbu + Mukta; on-screen keyboards (Limbu = copy; **Nepali = build**) |
-| 3 | Cross-links: Khajum Chokbang, Sabayelhang Network, this site | `lib/site-links.ts` (Sabayelhang URL TBD) |
+| 3 | Cross-links: Khajum Chokbang, Sawayethang Network, this site | `lib/site-links.ts` (Sawayethang → YouTube channel) |
 | 4 | Gallery + search by work title **or** author name | `galleries`/`gallery_images`; `books.searchIndex` fulltext holds `title + authorName` |
 | PDF | Books are downloadable + readable | `books.fileId` → `sahitya-books` PDF bucket; render with a PDF viewer |
 

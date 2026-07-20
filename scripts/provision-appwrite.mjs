@@ -189,7 +189,7 @@ const galleryImagesAttrs = [
 ];
 const galleryImagesIndexes = [{ key: "gallery_idx", type: IndexType.Key, attributes: ["galleryId", "order"] }];
 
-// Static content + settings (e.g. Sabayelhang URL once known)
+// Static content + settings (e.g. Sawayethang site URL once it exists)
 const pagesAttrs = [
   { key: "slug", type: "string", size: 200, required: true },
   { key: "title", type: "string", size: 300, required: true },

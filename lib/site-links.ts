@@ -1,5 +1,5 @@
 // Requirement #3 — the three sister sites link to each other.
-// Sabayelhang URL is unknown for now; falls back to "#" until the env is set.
+// Sawayethang Network currently lives on YouTube; env var can point it elsewhere later.
 
 export const SITE_LINKS = [
   {
@@ -10,9 +10,11 @@ export const SITE_LINKS = [
   },
   {
     key: "sabayelhang",
-    label: "साबायेल्हाङ नेटवर्क",
-    labelEn: "Sabayelhang Network",
-    href: process.env.NEXT_PUBLIC_LINK_SABAYELHANG || "#", // TODO: set when live
+    label: "सावायेथाङ नेटवर्क",
+    labelEn: "Sawayethang Network",
+    href:
+      process.env.NEXT_PUBLIC_LINK_SABAYELHANG ||
+      "https://www.youtube.com/@sawayethangnetwork3692",
   },
   {
     key: "sahitya",

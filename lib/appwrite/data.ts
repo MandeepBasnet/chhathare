@@ -232,6 +232,31 @@ export async function getGalleryById(id: string): Promise<Gallery | null> {
   }
 }
 
+// How many images each gallery actually holds, keyed by galleryId. A gallery's
+// thumbnail can come from its cover alone, so a cover-only gallery looks
+// populated in every listing while its detail page is empty — the admin list
+// uses this to surface that. One paged scan beats a query per gallery.
+export async function galleryImageCounts(): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  let cursor: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    const queries = [Query.orderAsc("$id"), Query.limit(100)];
+    if (cursor) queries.push(Query.cursorAfter(cursor));
+    const res = await adminApi.databases().listDocuments({
+      databaseId: DB,
+      collectionId: C.galleryImages,
+      queries,
+    });
+    for (const d of res.documents) {
+      const gid = (d as unknown as GalleryImage).galleryId;
+      if (gid) counts.set(gid, (counts.get(gid) ?? 0) + 1);
+    }
+    if (res.documents.length < 100) break;
+    cursor = res.documents[res.documents.length - 1].$id;
+  }
+  return counts;
+}
+
 export async function listGalleryImages(galleryId: string): Promise<GalleryImage[]> {
   const res = await adminApi.databases().listDocuments({
     databaseId: DB,

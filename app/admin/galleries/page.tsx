@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Images, Pencil } from "lucide-react";
-import { listGalleries } from "@/lib/appwrite/data";
+import { Plus, Images, Pencil, AlertTriangle } from "lucide-react";
+import { listGalleries, galleryImageCounts } from "@/lib/appwrite/data";
 import { photoUrl } from "@/lib/appwrite/storage-url";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { toNepaliDigits } from "@/lib/utils";
 
 export default async function AdminGalleriesList() {
-  const galleries = await listGalleries();
+  const [galleries, counts] = await Promise.all([listGalleries(), galleryImageCounts()]);
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -25,6 +26,7 @@ export default async function AdminGalleriesList() {
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {galleries.map((g) => {
             const cover = photoUrl(g.coverImageId, { width: 160, height: 120, quality: 70, bucket: "gallery" });
+            const imageCount = counts.get(g.$id) ?? 0;
             return (
             <li key={g.$id} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
               <Link href={`/admin/galleries/${g.$id}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -40,6 +42,15 @@ export default async function AdminGalleriesList() {
                 <div className="min-w-0">
                   <div className="truncate font-semibold hover:text-mountain-700">{g.title}</div>
                   {g.description && <div className="truncate text-sm text-[var(--color-muted)]">{g.description}</div>}
+                  {imageCount === 0 ? (
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      <AlertTriangle className="h-3 w-3" /> तस्वीर थपिएको छैन
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-xs text-[var(--color-muted)]">
+                      {toNepaliDigits(imageCount)} तस्वीर
+                    </div>
+                  )}
                 </div>
               </Link>
               <div className="flex shrink-0 items-center gap-1.5">

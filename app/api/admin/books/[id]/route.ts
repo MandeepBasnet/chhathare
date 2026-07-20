@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminApi } from "@/lib/appwrite/server";
 import { requireAdmin } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
+import { isLanguage } from "@/lib/taxonomy";
 
 export const runtime = "nodejs";
 const DB = appwriteConfig.databaseId;
@@ -22,6 +23,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const b = await req.json();
   const primary = b.title || b.titleLimbu || b.titleEn;
   if (!primary) return NextResponse.json({ error: "शीर्षक चाहिन्छ" }, { status: 400 });
+  if (!isLanguage(b.language)) {
+    return NextResponse.json({ error: "भाषा अमान्य" }, { status: 400 });
+  }
   try {
     await adminApi.databases().updateDocument({
       databaseId: DB,

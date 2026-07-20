@@ -4,6 +4,7 @@ import { adminApi } from "@/lib/appwrite/server";
 import { requireAdmin } from "@/lib/appwrite/auth-helpers";
 import { appwriteConfig } from "@/lib/appwrite/config";
 import { slugify } from "@/lib/utils";
+import { isLanguage } from "@/lib/taxonomy";
 
 export const runtime = "nodejs";
 const DB = appwriteConfig.databaseId;
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
   const b = await req.json();
   const primary = b.title || b.titleLimbu || b.titleEn;
   if (!primary) return NextResponse.json({ error: "शीर्षक चाहिन्छ" }, { status: 400 });
-  if (b.language !== "yakthung" && b.language !== "nepali") {
+  if (!isLanguage(b.language)) {
     return NextResponse.json({ error: "भाषा अमान्य" }, { status: 400 });
   }
   try {

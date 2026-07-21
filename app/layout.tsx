@@ -50,10 +50,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="ne"
-      className={`${mukta.variable} ${notoLimbu.variable} h-full antialiased`}
+      translate="no"
+      className={`notranslate ${mukta.variable} ${notoLimbu.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
+        {/* Page translation (Chrome Translate, translating extensions) replaces
+            every text node with <font> wrappers. React then tries to remove a
+            node the translator already swapped out and throws
+            "NotFoundError: Failed to execute 'removeChild' on 'Node'", killing
+            the page — reproducibly, on any view that conditionally renders,
+            e.g. changing the language select in the composition form.
+            The content is Yakthung/Nepali literature for readers of those
+            languages, so opting out of machine translation costs little. */}
+        <meta name="google" content="notranslate" />
         {/* Ad/privacy extensions routinely rewrite inline <head> scripts before
             React hydrates, which reports as a mismatch on this element. The
             suppression on <html> doesn't reach here — React only applies it one

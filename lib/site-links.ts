@@ -10,7 +10,7 @@ export const SITE_LINKS = [
   },
   {
     key: "sawayethang",
-    label: "सावायेथाङ नेटवर्क",
+    label: "सावायेहाङ नेटवर्क",
     labelEn: "Sawayethang Network",
     href:
       process.env.NEXT_PUBLIC_LINK_SAWAYETHANG ||
